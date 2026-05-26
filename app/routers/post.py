@@ -1,9 +1,15 @@
+"""
+- Never return and HTTP exception class,rather raise it, due to serialization problems.
+
+"""
+
+
 from .. import models, schemas, utils, oauth2
 
 from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
 from psycopg2.extras import RealDictCursor
 from ..database import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 
 router = APIRouter(
@@ -12,27 +18,34 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.Post])
-def get_all_post(db: Session = Depends(get_db)):
+def get_all_post(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursur.execute(""" SELECT * FROM posts """)
     # posts = cursur.fetchall()
 
-    posts = db.query(models.Post).all()
+    # posts = db.query(models.Post).filter(models.Post.user_id == current_user.id ).all()
+    posts = db.query(
+        models.Post
+        ).options(joinedload(models.Post.author)).all()
 
     return posts
 
 
 
 @router.get("/{id}", response_model=schemas.Post)
-def get_a_post(id: int, db: Session = Depends(get_db)):
+def get_a_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursur.execute("""SELECT * FROM posts WHERE id = %s """, (str(item_id)))
     # post = cursur.fetchone()
     # if not post:
     #     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    
 
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(models.Post).options(joinedload(models.Post.author)).filter(models.Post.id == id).first()
+    # if post.user_id != current_user.id:
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorize to perfomr such action")
+    
     print(post)
     if not post:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     
     print(post)
     return post
@@ -45,9 +58,8 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
     # cursur.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (posts.title, posts.content, posts.published))
     # new_post = cursur.fetchone()
     # conn.commit()
-    print(current_user.email)
     # new_posts = models.Post(title=post.title, content=post.content, published=post.published)
-    new_post = models.Post(**post.dict())
+    new_post = models.Post(user_id=current_user.id, **post.dict())
 
     db.add(new_post)
     db.commit()
@@ -56,19 +68,21 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
     return new_post
 
 
-git config --global user.email "you@example.com"
-  git config --global user.name "Your Name"
 @router.put("/{id}", response_model=schemas.Post)
-def update_post(id: int, post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def update_post(id: int, updated_post: schemas.PostCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cursur.execute(""" UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING * """, (post.title, post.content, post.published, str(id)))
 
     # updated_post = cursur.fetchone()
     # conn.commit()
 
     post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
 
     if post_query.first() != None: 
-        post_query.update(post.model_dump(), synchronize_session=False)
+        if post.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorize to perfomr such action")
+        
+        post_query.update(updated_post.dict(), synchronize_session=False)
 
         db.commit()
 
@@ -85,9 +99,15 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
     # deleted_post = cursur.fetchone()
     # conn.commit()
 
-    post = db.query(models.Post).filter(models.Post.id == id)
-    if post.first() != None: 
-        post.delete(synchronize_session=False)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+
+    if post_query.first() != None: 
+
+        if post.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorize to perfomr such action")
+
+        post_query.delete(synchronize_session=False)
         db.commit()
         return Response(status_code=status.HTTP_204_NO_CONTENT)
         

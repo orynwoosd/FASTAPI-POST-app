@@ -14,14 +14,15 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     - It expects user details to be passed in through form data, and not body of the request.
     - If email is passed in place of username, the is no problem.
     """
-    
+    print(user_credentials.username)
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
+    print(user)
 
     if not user:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid credentials")
     if not utils.verify_password(user_credentials.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials"
+            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials password"
         )
     
     # create token and return it

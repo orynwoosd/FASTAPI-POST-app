@@ -7,7 +7,6 @@ from fastapi import Depends
 ALGORITHM = "HS256"
 
 
-password_harsh = PasswordHash.recommended()
 
 
 def hash_password(plain_pass):

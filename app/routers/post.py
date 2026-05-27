@@ -10,7 +10,7 @@ from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
 from psycopg2.extras import RealDictCursor
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/posts",
@@ -18,14 +18,18 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.Post])
-def get_all_post(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+def get_all_post(
+    db: Session = Depends(get_db),
+      current_user: int = Depends(oauth2.get_current_user),
+        limit: int = 10, skip: int = 0, search: Optional[str] = ""):
     # cursur.execute(""" SELECT * FROM posts """)
     # posts = cursur.fetchall()
 
     # posts = db.query(models.Post).filter(models.Post.user_id == current_user.id ).all()
+    print(limit)
     posts = db.query(
         models.Post
-        ).options(joinedload(models.Post.author)).all()
+        ).options(joinedload(models.Post.author)).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
 
     return posts
 

@@ -1,3 +1,13 @@
+"""
+OverView:
+This file defines all SQLAlchemy ORM models and represents tables in the db
+In this file each class corresponds to a table in the database, and specifies;
+- The table structure (columns, data types, constraints)
+- Relations between tables, (e.g., ForeingKeys, Index)
+- Model level and database level validation rules.
+"""
+
+
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean, text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -26,7 +36,7 @@ class Post(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     # Relationships are completely independent of the database, all logic works without them.
-    # The just help us refrence tables with each orther for ease of communication
+    # The just help us refrence tables with each other for ease of communication
     author: Mapped["User"] = relationship(back_populates="posts")
 
 class User(Base):
@@ -48,3 +58,10 @@ class User(Base):
     )
 
     posts: Mapped[List["Post"]] = relationship(back_populates="author", cascade="all, delete-orphan")
+
+
+
+class Vote(Base):
+    __tablename__ = "votes"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True)

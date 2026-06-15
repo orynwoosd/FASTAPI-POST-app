@@ -1,4 +1,14 @@
-from pydantic import BaseModel, EmailStr, Field
+"""
+- This file holds the pydantic models that define the structure, type hints
+    and validation rules for data flowing through the application.
+Key Validations;
+- Request validations, which ensures incoming data, from API requests matches expected format.
+- Response modeling, which defines structure of data the API returns to clients
+- Data parsing, by converting raw JSON into python objects with correct data
+- Error feedbacks, are cleean and easy to debug.
+"""
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic.types import conint
 from datetime import datetime
 from typing import Optional
 class PostBase(BaseModel):
@@ -16,8 +26,9 @@ class UserOut(BaseModel):
     email: EmailStr
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
 
 class Post(PostBase):
@@ -25,11 +36,23 @@ class Post(PostBase):
     id: int
     created_at: datetime
     user_id: int
-    owner: UserOut = Field(alias="author")
+    author: UserOut 
 
-    class Config:
-        orm_mode = True
-        allow_population_by_field_name = True
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        validate_by_name=True 
+    )
+
+class PostVote(BaseModel):
+    Post: Post
+    votes: int
+
+    model_config = ConfigDict(
+        orm=True,
+        from_attributes=True,
+        validate_by_name=True
+        )
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -59,3 +82,7 @@ class User(BaseModel):
 class UserInDB(BaseModel):
     hashed_password: str
 
+
+class Vote(BaseModel):
+    post_id: int
+    dir: conint(le=1)

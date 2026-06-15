@@ -10,39 +10,71 @@ from fastapi import FastAPI, status, HTTPException, Response, Depends, APIRouter
 from psycopg2.extras import RealDictCursor
 from ..database import get_db
 from sqlalchemy.orm import Session, joinedload
-from typing import List
+from typing import List, Optional
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/posts",
     tags=["Posts"]
 )
 
-@router.get("/", response_model=List[schemas.Post])
-def get_all_post(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/", response_model=List[schemas.PostVote])
+# @router.get("/")
+def get_all_post(
+    db: Session = Depends(get_db), 
+    current_user: int = Depends(oauth2.get_current_user),
+      limit: int = 10, skip: int = 0, search: Optional[str] = "",
+    ):
     # cursur.execute(""" SELECT * FROM posts """)
     # posts = cursur.fetchall()
 
     # posts = db.query(models.Post).filter(models.Post.user_id == current_user.id ).all()
-    posts = db.query(
-        models.Post
-        ).options(joinedload(models.Post.author)).all()
+    # posts = db.query(
+    #     models.Post
+    #     ).options(joinedload(models.Post.author)).all()
+    
 
-    return posts
+     # Search query
+    # posts = db.query(models.Post).filter(
+    #     models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    
+    filtering = results
+    result_list = []
+    for post, votes in results:
+        post_vote = schemas.PostVote(
+            Post=post,
+            votes=votes
+        )
+        result_list.append(post_vote)
+
+    return result_list
 
 
 
-@router.get("/{id}", response_model=schemas.Post)
-def get_a_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+@router.get("/{id}", response_model=schemas.PostVote)
+def get_a_post(
+    id: int, db: Session = Depends(get_db), 
+    current_user: int = Depends(oauth2.get_current_user)
+    ):
     # cursur.execute("""SELECT * FROM posts WHERE id = %s """, (str(item_id)))
     # post = cursur.fetchone()
     # if not post:
     #     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
-    
+   
 
-    post = db.query(models.Post).options(joinedload(models.Post.author)).filter(models.Post.id == id).first()
+    # post = db.query(models.Post).options(joinedload(models.Post.author)).filter(models.Post.id == id).first()
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id == id).first()
+    
+    print(post)
     # if post.user_id != current_user.id:
     #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorize to perfomr such action")
     
+
+    
+   
     print(post)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")

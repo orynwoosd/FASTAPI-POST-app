@@ -1,14 +1,39 @@
+"""
+This module is responsible for validating User sessions, by use of tokens.
+- This ensures users are login and assign a valid token.
+- This is then used for session validation over various API request to prove
+    - who the user is 
+
+-- create_access_token: 
+    - Makes a copy of the input dictionary
+    - Calculate expiration time
+    - Add it to payload
+    - Encode and signs the token using jwt.encode()
+    - sign it with secret key and a specific algorithm.
+    - Hence ensuring tokens can`t be tempered with.
+
+-- verify_access_token:
+    - This function validates access token, extract user credentials
+        and return structured info about user, else exceptions.
+    - It decodes the recieved data using the secret key and algorithm
+    - Ensures token has not been tempered with.
+    - Also checks expiration.
+    - Structure the validated datat using pydantic
+
+"""
+
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from . import schemas, database, models
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from .config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-SECRET_KEY = "fjfjfueruoeieri98439085hj083gj4kfj48jffghgu5j83jgfu5gfj5i39gfjkgijg89iwsmcnvbnbutjntvcx23"
-ACCESS_TOKEN_EXPIRES_MINUTES = 60 
-ALGORITHM = "HS256"
+SECRET_KEY = settings.secret_key
+ACCESS_TOKEN_EXPIRES_MINUTES = settings.access_token_expiration_time
+ALGORITHM = settings.algorithm
 
 
 def create_access_token(data: dict):

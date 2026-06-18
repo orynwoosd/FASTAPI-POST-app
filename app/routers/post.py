@@ -22,7 +22,6 @@ router = APIRouter(
 # @router.get("/")
 def get_all_post(
     db: Session = Depends(get_db), 
-    current_user: int = Depends(oauth2.get_current_user),
       limit: int = 10, skip: int = 0, search: Optional[str] = "",
     ):
     # cursur.execute(""" SELECT * FROM posts """)
@@ -144,5 +143,3 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
         return Response(status_code=status.HTTP_204_NO_CONTENT)
         
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post with id not found")
-
-

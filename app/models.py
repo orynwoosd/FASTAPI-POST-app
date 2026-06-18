@@ -5,6 +5,14 @@ In this file each class corresponds to a table in the database, and specifies;
 - The table structure (columns, data types, constraints)
 - Relations between tables, (e.g., ForeingKeys, Index)
 - Model level and database level validation rules.
+- This file is now 
+
+
+- Linking it with alembic allows us to auto create tables.
+    - with this alembic can import our models and analyze them.
+    - It can figure out what columns are missing and fill them in.
+    - It can fill constraints to and also create new tables 
+    - This is all done by reading are models
 """
 
 
@@ -58,6 +66,7 @@ class User(Base):
     )
 
     posts: Mapped[List["Post"]] = relationship(back_populates="author", cascade="all, delete-orphan")
+    phone_number: Mapped[str] = mapped_column(String(100))
 
 
 

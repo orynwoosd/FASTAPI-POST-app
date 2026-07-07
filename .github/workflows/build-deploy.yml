@@ -14,3 +14,8 @@ jobs:
           python-version: "3.14"
       - name: install all dependencies
         run: pip install -r requirements.txt
+      - name: test with pytest
+        run: |
+          pip install pytest
+          pytest
+          

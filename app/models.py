@@ -66,7 +66,7 @@ class User(Base):
     )
 
     posts: Mapped[List["Post"]] = relationship(back_populates="author", cascade="all, delete-orphan")
-    phone_number: Mapped[str] = mapped_column(String(100))
+    # phone_number: Mapped[str] = mapped_column(String(100))
 
 
 

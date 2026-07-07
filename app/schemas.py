@@ -48,15 +48,12 @@ class PostVote(BaseModel):
     Post: Post
     votes: int
 
-    model_config = ConfigDict(
-        orm=True,
-        from_attributes=True,
-        validate_by_name=True
-        )
+    model_config = ConfigDict(orm=True,from_attributes=True,validate_by_name=True)
 
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    # phone_number: str
 
 
 
@@ -82,7 +79,7 @@ class User(BaseModel):
 class UserInDB(BaseModel):
     hashed_password: str
 
-
+ 
 class Vote(BaseModel):
     post_id: int
     dir: conint(le=1)

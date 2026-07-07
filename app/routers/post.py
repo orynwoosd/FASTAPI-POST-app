@@ -23,6 +23,7 @@ router = APIRouter(
 def get_all_post(
     db: Session = Depends(get_db), 
       limit: int = 10, skip: int = 0, search: Optional[str] = "",
+      current_user: int = Depends(oauth2.get_current_user)
     ):
     # cursur.execute(""" SELECT * FROM posts """)
     # posts = cursur.fetchall()
@@ -56,6 +57,7 @@ def get_all_post(
 def get_a_post(
     id: int, db: Session = Depends(get_db), 
     current_user: int = Depends(oauth2.get_current_user)
+    
     ):
     # cursur.execute("""SELECT * FROM posts WHERE id = %s """, (str(item_id)))
     # post = cursur.fetchone()

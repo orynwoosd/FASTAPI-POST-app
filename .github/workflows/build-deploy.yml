@@ -4,15 +4,17 @@ on: ["push", "pull_request"]
 
 jobs:
   job1:
+      environment:
+        name: testing
       env:
-        DATABASE_HOSTNAME: localhost
+        DATABASE_HOSTNAME: ${{secrets.DATABASE_HOSTNAME}}
         DATABASE_PORT: 5432
-        DATABASE_PASSWORD: fastapipostpass
-        DATABASE_NAME: fastapipost
-        DATABASE_USERNAME: fastapipost_user
-        SECRET_KEY: fjfjfueruoeieri98439085hj083gj4kfj48jffghgu5j83jgfu5gfj5i39gfjkgijg89iwsmcnvbnbutjntvcx23
-        ALGORITHM: HS256
-        ACCESS_TOKEN_EXPIRATION_TIME: 300
+        DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
+        DATABASE_NAME: ${{SECRETS.DATABASE_NAME}}
+        DATABASE_USERNAME: ${{SECRETS.DATABASE_USERNAME}}
+        SECRET_KEY: ${{SECRETS.SECRET_KEY}}
+        ALGORITHM: ${{secrets.ALGORITHM}}
+        ACCESS_TOKEN_EXPIRATION_TIME: ${{secrets.ACCESS_TOKEN_EXPIRATION_TIME}}
       runs-on: ubuntu-latest
       steps:
         - name: pulling git repo

@@ -17,7 +17,7 @@ jobs:
         ACCESS_TOKEN_EXPIRATION_TIME: ${{secrets.ACCESS_TOKEN_EXPIRATION_TIME}}
       services:
         postgres:
-          image: postgress
+          image: postgres
           env: 
             POSTGRES_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
             POSTGRES_DB: ${{secrets.DATABASE_NAME}}_test
